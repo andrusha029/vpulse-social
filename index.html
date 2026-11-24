@@ -292,7 +292,7 @@ async function saveProfile(){
 
 async function renderFriendsPage(q=""){
  const other=document.getElementById("other");if(!other)return;
- other.innerHTML='<h2>Друзья</h2><div class="post"><input id="friendSearchDb" type="search" name="vpulse_friend_lookup_2026" placeholder="Найти людей…" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="search" data-lpignore="true" data-form-type="other" style="width:100%;background:#0e0a11;border:1px solid var(--line);border-radius:11px;padding:11px;color:white"><div id="friendsDbList" class="muted" style="padding:12px">Загружаем…</div></div>';
+ other.innerHTML='<h2>Друзья</h2><div class="post"><input id="friendSearchDb" type="search" name="vpulse_friend_lookup_2026" aria-label="Поиск друзей" placeholder="Найти людей…" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="search" data-lpignore="true" data-form-type="other" style="width:100%;background:#0e0a11;border:1px solid var(--line);border-radius:11px;padding:11px;color:white"><div id="friendsDbList" class="muted" style="padding:12px">Загружаем…</div></div>';
  const input=document.getElementById("friendSearchDb");input.value=q;input.oninput=()=>loadFriendsDb(input.value);await loadFriendsDb(q);
 }
 async function loadFriendsDb(q=""){
