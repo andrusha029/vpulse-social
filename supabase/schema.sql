@@ -64,7 +64,10 @@ create table if not exists public.messages (
 create index if not exists posts_created_at_idx on public.posts (created_at desc);
 create index if not exists posts_user_created_idx on public.posts (user_id, created_at desc);
 create index if not exists comments_post_created_idx on public.comments (post_id, created_at);
+create index if not exists comments_user_id_idx on public.comments (user_id);
+create index if not exists likes_post_id_idx on public.likes (post_id);
 create index if not exists messages_conversation_idx on public.messages (sender_id, recipient_id, created_at desc);
+create index if not exists messages_recipient_created_idx on public.messages (recipient_id, created_at desc);
 create index if not exists friendships_addressee_status_idx on public.friendships (addressee_id, status);
 
 -- Automatically create a profile when a user registers.
