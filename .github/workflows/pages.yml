@@ -21,6 +21,18 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
+      - name: Validate inline JavaScript
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path("index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r'<script\\b(?![^>]*\\bsrc=)[^>]*>(.*?)</script>', html, re.I | re.S)
+          if not scripts:
+              raise SystemExit("No inline JavaScript found")
+          Path("/tmp/vpulse-inline.js").write_text("\\n".join(scripts), encoding="utf-8")
+          PY
+          node --check /tmp/vpulse-inline.js
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
