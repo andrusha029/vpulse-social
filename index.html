@@ -282,7 +282,7 @@ async function renderVideosPage(){
  ]);
  if(pr.error||dp.error){box.textContent=(pr.error||dp.error).message;return;}
  const names=new Map([...(pr.data||[]),...(dp.data||[])].map(x=>[x.id,x.display_name]));
- box.innerHTML=posts.map(x=>{const video=/\\.(mp4|webm|mov|m4v)(\\?|$)/i.test(x.media_url||"");return '<article class="post"><div class="posthead"><b>'+escV(names.get(x.user_id)||"Пользователь")+'</b>'+(x.isDemo?'<span class="small">ДЕМО</span>':'')+'</div><p>'+escV(x.content||"")+'</p>'+(video?'<video class="postimg" loading="lazy" controls playsinline src="'+escV(x.media_url)+'"></video>':'<img class="postimg" loading="lazy" src="'+escV(x.media_url)+'" alt="Фото публикации">')+'</article>';}).join("");
+ box.innerHTML=posts.map(x=>{const video=/\.(mp4|webm|mov|m4v)(\?|$)/i.test(x.media_url||"");return '<article class="post"><div class="posthead"><b>'+escV(names.get(x.user_id)||"Пользователь")+'</b>'+(x.isDemo?'<span class="small">ДЕМО</span>':'')+'</div><p>'+escV(x.content||"")+'</p>'+(video?'<video class="postimg" loading="lazy" controls playsinline src="'+escV(x.media_url)+'"></video>':'<img class="postimg" loading="lazy" src="'+escV(x.media_url)+'" alt="Фото публикации">')+'</article>';}).join("");
 }
 const vpulseShowPage=showPage;
 let currentVPage="feed";
