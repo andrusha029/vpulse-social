@@ -219,10 +219,10 @@ async function loadFriendsDb(q=""){
  if(!users.length){box.innerHTML='<div class="empty">Никого не найдено</div>';return;}
  box.innerHTML=users.map(x=>{
   const rel=x.isDemo?null:rels.find(r=>(r.requester_id===x.id&&r.addressee_id===vpulseUser.id)||(r.addressee_id===x.id&&r.requester_id===vpulseUser.id));
-  let action=x.isDemo?'<span class="small">ДЕМО-ПРОФИЛЬ</span>':'<button class="btn" onclick="sendFriendDb(\\''+x.id+'\\')">Добавить</button>';
+  let action=x.isDemo?'<span class="small">ДЕМО-ПРОФИЛЬ</span>':'<button class="btn" onclick="sendFriendDb(\''+x.id+'\')">Добавить</button>';
   if(rel?.status==="accepted")action='<span class="small">Уже друзья</span>';
   else if(rel?.requester_id===vpulseUser.id)action='<span class="small">Заявка отправлена</span>';
-  else if(rel)action='<button class="btn" onclick="acceptFriendDb(\\''+rel.id+'\\')">Принять</button>';
+  else if(rel)action='<button class="btn" onclick="acceptFriendDb(\''+rel.id+'\')">Принять</button>';
   return '<div class="person"><img loading="lazy" src="'+escV(x.avatar_url||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100")+'"><div><b>'+escV(x.display_name||"Пользователь")+'</b><br><span class="small">@'+escV(x.username||"user")+'</span></div>'+action+'</div>';
  }).join("");
 }
