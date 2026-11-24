@@ -126,7 +126,25 @@ async function publish(){
 }
 async function likeDb(b){if(!vpulseUser){openAuth();return;}const id=b.closest(".post")?.dataset.id;if(!id)return;const old=b.classList.contains("liked"),r=old?await vpulse.from("likes").delete().eq("post_id",id).eq("user_id",vpulseUser.id):await vpulse.from("likes").insert({post_id:id,user_id:vpulseUser.id});if(r.error){toast(r.error.message);return;}await loadVPosts();}
 async function addCommentDb(b){if(!vpulseUser){openAuth();return;}const input=b.parentElement.querySelector("input"),content=input.value.trim(),id=b.closest(".post")?.dataset.id;if(!content||!id)return;const {error}=await vpulse.from("comments").insert({post_id:id,user_id:vpulseUser.id,content});if(error){toast("Ошибка комментария: "+error.message);return;}await loadVPosts();toast("Комментарий добавлен");}
-function searchPosts(q){document.querySelectorAll("#feed .post").forEach(p=>p.style.display=(p.dataset.search||"").includes(q.toLowerCase())?"block":"none");}
+let vpulseSearchTimer=null;
+async function searchPosts(q){
+ const term=(q||"").trim().toLowerCase();
+ document.querySelectorAll("#feed .post").forEach(p=>p.style.display=(p.dataset.search||"").includes(term)?"block":"none");
+ let box=document.getElementById("peopleSearchResults"),feed=document.getElementById("feed");
+ if(!box&&feed){box=document.createElement("div");box.id="peopleSearchResults";feed.prepend(box);}
+ if(!box)return;
+ if(term.length<2){box.innerHTML="";return;}
+ clearTimeout(vpulseSearchTimer);
+ vpulseSearchTimer=setTimeout(async()=>{
+  const [u,d]=await Promise.all([
+   vpulse.from("profiles").select("id,display_name,username,avatar_url").limit(150),
+   vpulse.from("demo_profiles").select("id,display_name,username,avatar_url")
+  ]);
+  if(u.error||d.error){box.innerHTML='<div class="post small">Не удалось выполнить поиск людей.</div>';return;}
+  const people=[...(u.data||[]),...(d.data||[])].filter(x=>((x.display_name||"")+" "+(x.username||"")).toLowerCase().includes(term)).slice(0,8);
+  box.innerHTML=people.length?'<div class="post"><b>Люди</b>'+people.map(x=>'<div class="person"><img loading="lazy" src="'+escV(x.avatar_url||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100")+'"><div><b>'+escV(x.display_name||"Пользователь")+'</b><br><span class="small">@'+escV(x.username||"user")+'</span></div>'+(String(x.username||"").startsWith("demo_")?'<span class="small">ДЕМО</span>':'')+'</div>').join("")+'</div>':'';
+ },250);
+}
 
 let cachedMyProfile=null;
 async function loadMyProfile(){
@@ -248,13 +266,23 @@ async function sendMessageDb(){
 }
 async function renderVideosPage(){
  const other=document.getElementById("other");if(!other)return;
- other.innerHTML='<h2>Видео и медиа</h2><div id="videosDbList">Загружаем публикации…</div>';
+ other.innerHTML='<h2>Фото и видео</h2><div id="videosDbList">Загружаем медиа…</div>';
  const box=document.getElementById("videosDbList");
- const {data,error}=await vpulse.from("posts").select("id,user_id,content,media_url,created_at").not("media_url","is",null).order("created_at",{ascending:false}).limit(50);
- if(error){box.textContent=error.message;return;}
- if(!data?.length){box.innerHTML='<div class="post empty">Медиа пока нет. Добавь фото или видео к публикации в ленте.</div>';return;}
- const ids=[...new Set(data.map(x=>x.user_id))],r=await vpulse.from("profiles").select("id,display_name").in("id",ids),names=new Map((r.data||[]).map(x=>[x.id,x.display_name]));
- box.innerHTML=data.map(x=>{const video=/\.(mp4|webm|mov|m4v)(\?|$)/i.test(x.media_url||"");return '<article class="post"><b>'+escV(names.get(x.user_id)||"Пользователь")+'</b><p>'+escV(x.content||"")+'</p>'+(video?'<video class="postimg" controls playsinline src="'+escV(x.media_url)+'"></video>':'<img class="postimg" src="'+escV(x.media_url)+'">')+'</article>';}).join("");
+ const [real,demo]=await Promise.all([
+  vpulse.from("posts").select("id,user_id,content,media_url,created_at").not("media_url","is",null).order("created_at",{ascending:false}).limit(50),
+  vpulse.from("demo_posts").select("id,user_id,content,media_url,created_at").not("media_url","is",null).order("created_at",{ascending:false}).limit(50)
+ ]);
+ if(real.error||demo.error){box.textContent=(real.error||demo.error).message;return;}
+ const posts=[...(real.data||[]).map(x=>({...x,isDemo:false})),...(demo.data||[]).map(x=>({...x,isDemo:true}))].sort((x,y)=>new Date(y.created_at)-new Date(x.created_at));
+ if(!posts.length){box.innerHTML='<div class="post empty">Медиа пока нет. Добавь фото или видео к публикации в ленте.</div>';return;}
+ const realIds=[...new Set((real.data||[]).map(x=>x.user_id))];
+ const [pr,dp]=await Promise.all([
+  realIds.length?vpulse.from("profiles").select("id,display_name").in("id",realIds):Promise.resolve({data:[],error:null}),
+  vpulse.from("demo_profiles").select("id,display_name")
+ ]);
+ if(pr.error||dp.error){box.textContent=(pr.error||dp.error).message;return;}
+ const names=new Map([...(pr.data||[]),...(dp.data||[])].map(x=>[x.id,x.display_name]));
+ box.innerHTML=posts.map(x=>{const video=/\\.(mp4|webm|mov|m4v)(\\?|$)/i.test(x.media_url||"");return '<article class="post"><div class="posthead"><b>'+escV(names.get(x.user_id)||"Пользователь")+'</b>'+(x.isDemo?'<span class="small">ДЕМО</span>':'')+'</div><p>'+escV(x.content||"")+'</p>'+(video?'<video class="postimg" loading="lazy" controls playsinline src="'+escV(x.media_url)+'"></video>':'<img class="postimg" loading="lazy" src="'+escV(x.media_url)+'" alt="Фото публикации">')+'</article>';}).join("");
 }
 const vpulseShowPage=showPage;
 let currentVPage="feed";
