@@ -247,7 +247,19 @@ async function renderVideosPage(){
  box.innerHTML=data.map(x=>{const video=/\.(mp4|webm|mov|m4v)(\?|$)/i.test(x.media_url||"");return '<article class="post"><b>'+escV(names.get(x.user_id)||"Пользователь")+'</b><p>'+escV(x.content||"")+'</p>'+(video?'<video class="postimg" controls playsinline src="'+escV(x.media_url)+'"></video>':'<img class="postimg" src="'+escV(x.media_url)+'">')+'</article>';}).join("");
 }
 const vpulseShowPage=showPage;
-showPage=function(page){vpulseShowPage(page);if(page==="friends")renderFriendsPage();if(page==="messages")renderMessagesPage();if(page==="videos")renderVideosPage();};
+let currentVPage="feed";
+showPage=function(page){
+ if(!["feed","friends","videos","messages","profile"].includes(page))page="feed";
+ currentVPage=page;
+ vpulseShowPage(page);
+ if(location.hash!=="#"+page)history.replaceState(null,"","#"+page);
+ if(page==="friends")renderFriendsPage();
+ if(page==="messages")renderMessagesPage();
+ if(page==="videos")renderVideosPage();
+};
+// Восстанавливаем открытую вкладку после обновления страницы.
+const savedVPage=location.hash.replace(/^#/,"");
+showPage(["feed","friends","videos","messages","profile"].includes(savedVPage)?savedVPage:"feed");
 
 if(vpulse){vpulse.auth.onAuthStateChange(()=>setTimeout(syncAuth,0));syncAuth();}else{toast("Не загрузился клиент Supabase");}
 </script></body></html>
