@@ -65,7 +65,36 @@ async function submitAuth(){if(!vpulse)return;const email=document.getElementByI
 async function syncAuth(){if(!vpulse)return;const {data}=await vpulse.auth.getSession();vpulseUser=data.session?.user||null;const b=document.getElementById("authButton");if(b){b.textContent=vpulseUser?(vpulseUser.user_metadata?.display_name||vpulseUser.email.split("@")[0])+" · Выйти":"Войти";b.onclick=vpulseUser?logoutV:openAuth;}const d=document.getElementById("draft");if(d)d.placeholder=vpulseUser?"Что у тебя нового?":"Войди, чтобы публиковать записи…";await loadVPosts();}
 async function logoutV(){await vpulse.auth.signOut();await syncAuth();toast("Ты вышел из аккаунта");}
 function escV(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-async function loadVPosts(){if(!vpulse)return;const {data:posts,error}=await vpulse.from("posts").select("id,user_id,content,media_url,created_at,profiles(display_name,username,avatar_url),likes(user_id),comments(id,user_id,content,created_at,profiles(display_name))").order("created_at",{ascending:false}).limit(50);if(error){toast("Ошибка загрузки ленты: "+error.message);return;}const feed=document.getElementById("feed");feed.innerHTML="";if(!posts.length){feed.innerHTML='<div class="post empty"><h3>Пока нет публикаций</h3><p>Стань первым — поделись новостью!</p></div>';return;}posts.forEach(p=>{const n=p.profiles?.display_name||p.profiles?.username||"Пользователь",av=p.profiles?.avatar_url||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",liked=!!vpulseUser&&p.likes?.some(x=>x.user_id===vpulseUser.id),a=document.createElement("article");a.className="post";a.dataset.id=p.id;a.dataset.search=(p.content||"").toLowerCase();a.innerHTML='<div class="posthead"><img class="avatar" src="'+escV(av)+'"><div class="meta"><div class="postname">'+escV(n)+'</div><div class="small">'+new Date(p.created_at).toLocaleString("ru-RU")+'</div></div></div><div class="posttext">'+escV(p.content)+'</div>'+(p.media_url?'<img class="postimg" src="'+escV(p.media_url)+'">':"")+'<div class="postactions"><button class="action '+(liked?"liked":"")+'" onclick="likeDb(this)">'+(liked?"♥":"♡")+' <span>'+(p.likes?.length||0)+'</span></button><button class="action" onclick="toggleComments(this)">▢ Комментарии '+(p.comments?.length||"")+'</button><button class="action" onclick="sharePost()">↗ Поделиться</button></div><div class="commentbox"><input placeholder="Написать комментарий…"><button class="btn" onclick="addCommentDb(this)">➤</button></div><div class="comments">'+(p.comments||[]).map(c=>'<div><b>'+escV(c.profiles?.display_name||"Пользователь")+':</b> '+escV(c.content)+'</div>').join("")+'</div>';feed.append(a);});}
+async function loadVPosts(){
+ if(!vpulse)return;
+ const feed=document.getElementById("feed");if(!feed)return;
+ const {data:posts,error}=await vpulse.from("posts").select("id,user_id,content,media_url,created_at").order("created_at",{ascending:false}).limit(50);
+ if(error){feed.innerHTML='<div class="post empty"><h3>Не удалось загрузить ленту</h3><p>'+escV(error.message)+'</p><button class="btn" onclick="loadVPosts()">Повторить</button></div>';return;}
+ if(!posts?.length){feed.innerHTML='<div class="post empty"><h3>Пока нет публикаций</h3><p>Стань первым — поделись новостью!</p></div>';return;}
+ const ids=posts.map(p=>p.id),userIds=[...new Set(posts.map(p=>p.user_id))];
+ const [pr,lr,cr]=await Promise.all([
+  vpulse.from("profiles").select("id,display_name,username,avatar_url").in("id",userIds),
+  vpulse.from("likes").select("post_id,user_id").in("post_id",ids),
+  vpulse.from("comments").select("id,post_id,user_id,content,created_at").in("post_id",ids).order("created_at",{ascending:true})
+ ]);
+ const errors=[pr.error,lr.error,cr.error].filter(Boolean);
+ if(errors.length){feed.innerHTML='<div class="post empty"><h3>Ошибка загрузки данных</h3><p>'+escV(errors[0].message)+'</p><button class="btn" onclick="loadVPosts()">Повторить</button></div>';return;}
+ const commentUserIds=[...new Set((cr.data||[]).map(x=>x.user_id))];
+ const commentProfiles=commentUserIds.length?(await vpulse.from("profiles").select("id,display_name,username").in("id",commentUserIds)).data||[]:[];
+ const profiles=new Map((pr.data||[]).map(x=>[x.id,x])),cp=new Map(commentProfiles.map(x=>[x.id,x]));
+ const likes=lr.data||[],comments=cr.data||[];
+ feed.innerHTML="";
+ posts.forEach(p=>{
+  const author=profiles.get(p.user_id)||{},mine=likes.filter(x=>x.post_id===p.id),pc=comments.filter(x=>x.post_id===p.id);
+  const liked=!!vpulseUser&&mine.some(x=>x.user_id===vpulseUser.id),n=author.display_name||author.username||"Пользователь";
+  const av=author.avatar_url||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop";
+  const media=p.media_url||"",isVideo=/\.(mp4|webm|mov|m4v)(\?|$)/i.test(media);
+  const mediaHtml=media?(isVideo?'<video class="postimg" controls playsinline src="'+escV(media)+'"></video>':'<img class="postimg" src="'+escV(media)+'" alt="Вложение">'):"";
+  const a=document.createElement("article");a.className="post";a.dataset.id=p.id;a.dataset.search=(p.content||"").toLowerCase();
+  a.innerHTML='<div class="posthead"><img class="avatar" src="'+escV(av)+'"><div class="meta"><div class="postname">'+escV(n)+'</div><div class="small">'+new Date(p.created_at).toLocaleString("ru-RU")+'</div></div></div><div class="posttext">'+escV(p.content||"")+'</div>'+mediaHtml+'<div class="postactions"><button class="action '+(liked?"liked":"")+'" onclick="likeDb(this)">'+(liked?"♥":"♡")+' <span>'+mine.length+'</span></button><button class="action" onclick="toggleComments(this)">▢ Комментарии '+pc.length+'</button><button class="action" onclick="sharePost()">↗ Поделиться</button></div><div class="commentbox"><input placeholder="Написать комментарий…"><button class="btn" onclick="addCommentDb(this)">➤</button></div><div class="comments">'+pc.map(x=>{const u=cp.get(x.user_id)||{};return '<div><b>'+escV(u.display_name||u.username||"Пользователь")+':</b> '+escV(x.content)+'</div>';}).join("")+'</div>';
+  feed.append(a);
+ });
+}
 async function publish(){const d=document.getElementById("draft"),v=d.value.trim();if(!vpulseUser){openAuth();document.getElementById("authStatus").textContent="Войди или зарегистрируйся, чтобы публиковать.";return;}if(!v){toast("Напиши текст публикации");return;}const {error}=await vpulse.from("posts").insert({user_id:vpulseUser.id,content:v});if(error){toast("Ошибка публикации: "+error.message);return;}d.value="";await loadVPosts();toast("Публикация сохранена в облаке!");}
 async function likeDb(b){if(!vpulseUser){openAuth();return;}const id=b.closest(".post")?.dataset.id;if(!id)return;const old=b.classList.contains("liked"),r=old?await vpulse.from("likes").delete().eq("post_id",id).eq("user_id",vpulseUser.id):await vpulse.from("likes").insert({post_id:id,user_id:vpulseUser.id});if(r.error){toast(r.error.message);return;}await loadVPosts();}
 async function addCommentDb(b){if(!vpulseUser){openAuth();return;}const input=b.parentElement.querySelector("input"),content=input.value.trim(),id=b.closest(".post")?.dataset.id;if(!content||!id)return;const {error}=await vpulse.from("comments").insert({post_id:id,user_id:vpulseUser.id,content});if(error){toast("Ошибка комментария: "+error.message);return;}await loadVPosts();toast("Комментарий добавлен");}
@@ -85,7 +114,7 @@ async function loadMyProfile(){
  document.getElementById("editUsername").value=cachedMyProfile.username||"";
  document.getElementById("editBio").value=cachedMyProfile.bio||"";
  document.getElementById("editAvatar").value=cachedMyProfile.avatar_url||"";
- const count=await vpulse.from("posts").select("id",{count:"exact",head:true}).eq("author_id",vpulseUser.id);
+ const count=await vpulse.from("posts").select("id",{count:"exact",head:true}).eq("user_id",vpulseUser.id);
  document.getElementById("myPostCount").textContent=count.count??0;
 }
 function openProfileEditor(){if(!vpulseUser){openAuth();document.getElementById("authStatus").textContent="Сначала войди в аккаунт.";return;}document.getElementById("profileEditor").classList.remove("hide");}
