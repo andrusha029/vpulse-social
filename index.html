@@ -82,7 +82,7 @@ function showPage(page){document.querySelectorAll('[data-page]').forEach(b=>b.cl
 
 const VPULSE_URL="https://ftxlhjeiixtpbpibkbgo.supabase.co";
 const VPULSE_KEY="sb_publishable_wz6d9RwsORasiuD54v60hQ_kQT_9YFV";
-const vpulse=window.supabase?.createClient(VPULSE_URL,VPULSE_KEY);
+const vpulse=window.supabase?.createClient(VPULSE_URL,VPULSE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:window.localStorage}});
 let vpulseUser=null,authMode="login";
 function openAuth(){document.getElementById("authModal").classList.add("open");document.getElementById("authStatus").textContent="";}
 function closeAuth(){document.getElementById("authModal").classList.remove("open");}
@@ -438,5 +438,5 @@ showPage=function(page){
 const savedVPage=location.hash.replace(/^#/,"");
 showPage(["feed","friends","music","messages","profile"].includes(savedVPage)?savedVPage:"feed");
 
-if(vpulse){vpulse.auth.onAuthStateChange((_event,session)=>setTimeout(()=>syncAuth(session,true),0));syncAuth();}else{toast("Не загрузился клиент Supabase");}
+if(vpulse){vpulse.auth.onAuthStateChange((event,session)=>{if(["INITIAL_SESSION","SIGNED_IN","SIGNED_OUT","TOKEN_REFRESHED","USER_UPDATED"].includes(event))setTimeout(()=>syncAuth(session,true),0);});}else{toast("Не загрузился клиент Supabase");}
 </script></body></html>
