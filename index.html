@@ -26,7 +26,7 @@
 <button class="navitem" data-page="profile" onclick="showPage('profile')"><span class="emoji">◉</span>Мой профиль</button>
 </div><div class="widget mini"><div class="eyebrow">V PULSE</div><b>Твой мир. Твой пульс.</b><p class="small">Делись моментами и оставайся на связи.</p></div></aside>
 <main id="main">
-<section class="welcome"><div class="eyebrow">СОЦИАЛЬНАЯ СЕТЬ НОВОГО ПОКОЛЕНИЯ</div><h1>Твой мир.<br><span style="color:var(--pink)">Твой пульс.</span></h1><p>Общайся, делись моментами и находи людей по интересам.</p></section>
+
 <div class="stories" id="storiesList"><button class="story story-upload" onclick="openMyStoryOrUpload()"><div class="ring"><img id="myStoryAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop" alt="Моя история"><span class="story-add">＋</span></div><span id="myStoryLabel">＋ Ваша</span></button><div id="otherStories" style="display:flex;gap:13px"></div><input id="storyFile" type="file" accept="image/*" hidden onchange="uploadStory(this)"></div>
 <div class="composer"><div class="composehead"><img class="avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt=""><div><b>Поделись новостью</b><div class="small">Что у тебя нового?</div></div></div><textarea id="draft" placeholder="Напиши что-нибудь интересное…"></textarea><div class="composefoot"><label class="small" style="cursor:pointer">＋ Фото / Видео <input id="mediaFile" type="file" accept="image/*,video/*" style="display:none" onchange="updateMediaName(this)"></label><span id="mediaLabel" class="small"></span><button class="btn" onclick="publish()">Опубликовать</button></div></div>
 <div id="feed">
