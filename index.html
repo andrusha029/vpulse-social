@@ -190,21 +190,22 @@ async function renderFriendsPage(q=""){
 async function loadFriendsDb(q=""){
  const box=document.getElementById("friendsDbList");if(!box)return;
  if(!vpulseUser){box.textContent="Войди в аккаунт, чтобы находить друзей.";return;}
- const [u,f]=await Promise.all([
+ const [u,d,f]=await Promise.all([
   vpulse.from("profiles").select("id,display_name,username,avatar_url").neq("id",vpulseUser.id).limit(100),
+  vpulse.from("demo_profiles").select("id,display_name,username,avatar_url"),
   vpulse.from("friendships").select("id,requester_id,addressee_id,status").or("requester_id.eq."+vpulseUser.id+",addressee_id.eq."+vpulseUser.id)
  ]);
- if(u.error||f.error){box.textContent=(u.error||f.error).message;return;}
+ if(u.error||d.error||f.error){box.textContent=(u.error||d.error||f.error).message;return;}
  const rels=f.data||[],needle=(q||"").toLowerCase();
- const users=(u.data||[]).filter(x=>((x.display_name||"")+" "+(x.username||"")).toLowerCase().includes(needle));
+ const users=[...(u.data||[]).map(x=>({...x,isDemo:false})),...(d.data||[]).map(x=>({...x,isDemo:true}))].filter(x=>((x.display_name||"")+" "+(x.username||"")).toLowerCase().includes(needle));
  if(!users.length){box.innerHTML='<div class="empty">Никого не найдено</div>';return;}
  box.innerHTML=users.map(x=>{
-  const rel=rels.find(r=>(r.requester_id===x.id&&r.addressee_id===vpulseUser.id)||(r.addressee_id===x.id&&r.requester_id===vpulseUser.id));
-  let action='<button class="btn" onclick="sendFriendDb(\''+x.id+'\')">Добавить</button>';
+  const rel=x.isDemo?null:rels.find(r=>(r.requester_id===x.id&&r.addressee_id===vpulseUser.id)||(r.addressee_id===x.id&&r.requester_id===vpulseUser.id));
+  let action=x.isDemo?'<span class="small">ДЕМО-ПРОФИЛЬ</span>':'<button class="btn" onclick="sendFriendDb(\\''+x.id+'\\')">Добавить</button>';
   if(rel?.status==="accepted")action='<span class="small">Уже друзья</span>';
   else if(rel?.requester_id===vpulseUser.id)action='<span class="small">Заявка отправлена</span>';
-  else if(rel)action='<button class="btn" onclick="acceptFriendDb(\''+rel.id+'\')">Принять</button>';
-  return '<div class="person"><img src="'+escV(x.avatar_url||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100")+'"><div><b>'+escV(x.display_name||"Пользователь")+'</b><br><span class="small">@'+escV(x.username||"user")+'</span></div>'+action+'</div>';
+  else if(rel)action='<button class="btn" onclick="acceptFriendDb(\\''+rel.id+'\\')">Принять</button>';
+  return '<div class="person"><img loading="lazy" src="'+escV(x.avatar_url||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100")+'"><div><b>'+escV(x.display_name||"Пользователь")+'</b><br><span class="small">@'+escV(x.username||"user")+'</span></div>'+action+'</div>';
  }).join("");
 }
 async function sendFriendDb(id){
