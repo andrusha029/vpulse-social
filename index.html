@@ -14,14 +14,14 @@
 .authcard input{width:100%;margin:8px 0;background:#0d0911;border:1px solid var(--line);border-radius:12px;padding:12px;color:#fff}
 .authrow{display:flex;gap:8px;margin-top:12px}.authrow button{flex:1}.authclose{float:right;background:none;border:0;color:#cbb8cb;font-size:22px}.authstatus{font-size:13px;color:#ff9bce;min-height:22px;margin-top:10px}.profile-edit{margin-top:14px;text-align:left}.profile-edit label{display:block;color:#cbb8cb;font-size:12px;margin:10px 0 5px}.profile-edit input,.profile-edit textarea{width:100%;background:#0d0911;border:1px solid var(--line);border-radius:11px;padding:11px;color:#fff;outline:none}.profile-edit textarea{min-height:85px;resize:vertical}.profile-edit .btn{margin-top:12px}
  .story-upload{position:relative}.story-add{position:absolute;right:-2px;bottom:2px;width:21px;height:21px;border-radius:50%;background:var(--pink);border:2px solid #100b12;color:#fff;font-weight:900;line-height:16px}.story-viewer{position:fixed;inset:0;background:#050308f2;z-index:80;display:none;align-items:center;justify-content:center;padding:16px}.story-viewer.open{display:flex}.story-frame{position:relative;width:min(430px,100%);height:min(780px,92dvh);background:#120d16;border:1px solid #663052;border-radius:22px;overflow:hidden;display:flex;align-items:center;justify-content:center}.story-photo{width:100%;height:100%;object-fit:contain;background:#08060a}.story-top{position:absolute;top:12px;left:12px;right:55px;z-index:3;display:flex;align-items:center;gap:9px;text-shadow:0 1px 8px #000}.story-top img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid white}.story-top strong{flex:1}.story-top .small{color:white}.story-progress{position:absolute;top:7px;left:10px;right:10px;display:flex;gap:4px;z-index:4}.story-progress i{height:3px;flex:1;background:#ffffff55;border-radius:4px}.story-progress i.done{background:#fff}.story-nav{position:absolute;inset:50% 0 auto;display:flex;justify-content:space-between;transform:translateY(-50%);z-index:2;pointer-events:none}.story-nav button{pointer-events:auto;margin:0 8px;border:0;border-radius:50%;width:38px;height:38px;background:#08060a88;color:white;font-size:23px}.story-close{position:absolute;top:12px;right:12px;z-index:5;border:0;background:#130d18b8;color:white;border-radius:50%;width:36px;height:36px;font-size:22px}.story-empty{font-size:12px;color:var(--muted);padding:8px 0 0 4px}@media(max-width:650px){.story-frame{height:calc(100dvh - 24px);width:100%;border-radius:16px}}
-</style></head>
+.music-form{display:grid;gap:9px}.music-form input{width:100%;background:#0e0a11;color:white;border:1px solid var(--line);border-radius:11px;padding:12px;outline:none}.music-track{padding:14px;margin:10px 0;background:#17101b;border:1px solid var(--line);border-radius:15px}.music-track iframe{width:100%;height:166px;border:0;border-radius:12px;background:#09070c}.music-track audio{width:100%;margin-top:10px}.music-track-head{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px}.music-delete{border:1px solid var(--line);background:#251321;color:#ff9bce;border-radius:9px;padding:7px 10px}.music-hint{font-size:12px;color:var(--muted);line-height:1.5}</style></head>
 <body>
 <header class="top"><div class="topin"><a class="brand" href="#" onclick="showPage('feed');return false">V <b>PULSE</b></a><div class="search"><input id="search" type="text" name="vpulse_search_box_2026" placeholder="Поиск людей и публикаций…" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="search" role="searchbox" aria-label="Поиск людей и публикаций" data-lpignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" oninput="searchPosts(this.value)"></div><div class="topactions"><button class="ic" onclick="toast('Уведомления скоро появятся')">♧</button><button class="ic" onclick="showPage('messages')">✉</button></div></div></header>
 <div class="layout">
 <aside class="side"><div class="navbox">
 <button class="navitem active" data-page="feed" onclick="showPage('feed')"><span class="emoji">⌂</span>Моя лента</button>
 <button class="navitem" data-page="friends" onclick="showPage('friends')"><span class="emoji">♧</span>Друзья</button>
-<button class="navitem" data-page="videos" onclick="showPage('videos')"><span class="emoji">▷</span>Видео</button>
+<button class="navitem" data-page="music" onclick="showPage('music')"><span class="emoji">♫</span>Музыка</button>
 <button class="navitem" data-page="messages" onclick="showPage('messages')"><span class="emoji">✉</span>Сообщения</button>
 <button class="navitem" data-page="profile" onclick="showPage('profile')"><span class="emoji">◉</span>Мой профиль</button>
 </div><div class="widget mini"><div class="eyebrow">V PULSE</div><b>Твой мир. Твой пульс.</b><p class="small">Делись моментами и оставайся на связи.</p></div></aside>
@@ -36,7 +36,7 @@
 </main>
 <aside class="right"><div class="widget"><h3>🔥 Сейчас обсуждают</h3><div class="trend"><span class="small">Тема дня</span><strong>#V PULSE</strong><span class="small">Наша новая соцсеть</span></div><div class="trend"><span class="small">Популярное</span><strong>#ХорошееНастроение</strong><span class="small">2,4 тыс. публикаций</span></div><div class="trend"><span class="small">Обсуждают</span><strong>#Путешествия</strong><span class="small">986 публикаций</span></div></div><div class="widget"><h3>Возможно, знакомы</h3><div class="person"><img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop"><div><b>Денис</b><br><span class="small">Общие интересы</span></div><button onclick="this.textContent='Отправлено'">＋</button></div><div class="person"><img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&h=100&fit=crop"><div><b>Настя</b><br><span class="small">Новый участник</span></div><button onclick="this.textContent='Отправлено'">＋</button></div></div></aside>
 </div>
-<nav class="tabs"><button class="active" data-page="feed" onclick="showPage('feed')"><span>⌂</span>Лента</button><button data-page="friends" onclick="showPage('friends')"><span>♧</span>Друзья</button><button data-page="videos" onclick="showPage('videos')"><span>▷</span>Видео</button><button data-page="messages" onclick="showPage('messages')"><span>✉</span>Чаты</button><button data-page="profile" onclick="showPage('profile')"><span>◉</span>Профиль</button></nav><div id="toast" class="toast"></div><div id="storyViewer" class="story-viewer" onclick="if(event.target===this)closeStoryViewer()"><div class="story-frame"><div class="story-progress" id="storyProgress"></div><div class="story-top"><img id="storyAuthorAvatar" src="" alt=""><strong id="storyAuthorName"></strong><span id="storyAge" class="small"></span></div><button class="story-close" onclick="closeStoryViewer()">×</button><img id="storyPhoto" class="story-photo" src="" alt="История"><div class="story-nav"><button onclick="previousStory()">‹</button><button onclick="nextStory()">›</button></div></div></div>
+<nav class="tabs"><button class="active" data-page="feed" onclick="showPage('feed')"><span>⌂</span>Лента</button><button data-page="friends" onclick="showPage('friends')"><span>♧</span>Друзья</button><button data-page="music" onclick="showPage('music')"><span>♫</span>Музыка</button><button data-page="messages" onclick="showPage('messages')"><span>✉</span>Чаты</button><button data-page="profile" onclick="showPage('profile')"><span>◉</span>Профиль</button></nav><div id="toast" class="toast"></div><div id="storyViewer" class="story-viewer" onclick="if(event.target===this)closeStoryViewer()"><div class="story-frame"><div class="story-progress" id="storyProgress"></div><div class="story-top"><img id="storyAuthorAvatar" src="" alt=""><strong id="storyAuthorName"></strong><span id="storyAge" class="small"></span></div><button class="story-close" onclick="closeStoryViewer()">×</button><img id="storyPhoto" class="story-photo" src="" alt="История"><div class="story-nav"><button onclick="previousStory()">‹</button><button onclick="nextStory()">›</button></div></div></div>
 <div id="authModal" class="authmodal" onclick="if(event.target===this)closeAuth()"><div class="authcard">
 <button class="authclose" onclick="closeAuth()">×</button><div class="eyebrow">V PULSE ACCOUNT</div><h2 id="authTitle">Войти в V PULSE</h2><p class="muted small">Твой профиль, публикации и друзья — теперь в одном месте.</p>
 <input id="authName" placeholder="Как тебя зовут" autocomplete="name" class="hide">
@@ -329,40 +329,89 @@ async function sendMessageDb(){
  if(error){toast(error.message);return;}
  toast("Сообщение отправлено");await loadMessagesDb();
 }
-async function renderVideosPage(){
+function musicProvider(url){
+ try{
+  const u=new URL(url);
+  if(u.protocol!=="https:")return null;
+  const host=u.hostname.toLowerCase().replace(/^www\./,"");
+  if(host==="youtu.be"||host==="youtube.com"||host==="m.youtube.com"||host==="music.youtube.com"){
+   let id=host==="youtu.be"?u.pathname.split("/").filter(Boolean)[0]:(u.searchParams.get("v")||u.pathname.match(/\/(?:embed|shorts)\/([^/?]+)/)?.[1]);
+   return id&&/^[A-Za-z0-9_-]{6,20}$/.test(id)?{provider:"youtube",url:"https://www.youtube.com/watch?v="+id}:null;
+  }
+  if(host==="open.spotify.com"){
+   const m=u.pathname.match(/^\/(track|album|playlist|episode)\/([A-Za-z0-9]+)$/);
+   return m?{provider:"spotify",url:"https://open.spotify.com/"+m[1]+"/"+m[2]}:null;
+  }
+  if(host==="soundcloud.com"||host==="m.soundcloud.com"){
+   return {provider:"soundcloud",url:u.href};
+  }
+  if(/\.(mp3|m4a|aac|ogg|opus|wav|flac)(?:$)/i.test(u.pathname)){
+   return {provider:"audio",url:u.href};
+  }
+ }catch(e){}
+ return null;
+}
+function musicPlayer(track){
+ const url=track.source_url,provider=track.provider;
+ if(provider==="youtube"){
+  const id=new URL(url).searchParams.get("v");
+  return '<iframe title="YouTube player" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/'+escV(id)+'"></iframe>';
+ }
+ if(provider==="spotify"){
+  const u=new URL(url),parts=u.pathname.split("/").filter(Boolean);
+  return '<iframe title="Spotify player" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" src="https://open.spotify.com/embed/'+escV(parts[0])+'/'+escV(parts[1])+'?theme=0"></iframe>';
+ }
+ if(provider==="soundcloud"){
+  return '<iframe title="SoundCloud player" loading="lazy" allow="autoplay" src="https://w.soundcloud.com/player/?url='+encodeURIComponent(url)+'&color=%23ff2997&auto_play=false&show_user=true&visual=true"></iframe>';
+ }
+ return '<audio controls preload="none" src="'+escV(url)+'"></audio>';
+}
+async function renderMusicPage(){
  const other=document.getElementById("other");if(!other)return;
- other.innerHTML='<h2>Фото и видео</h2><div id="videosDbList">Загружаем медиа…</div>';
- const box=document.getElementById("videosDbList");
- const [real,demo]=await Promise.all([
-  vpulse.from("posts").select("id,user_id,content,media_url,created_at").not("media_url","is",null).order("created_at",{ascending:false}).limit(50),
-  vpulse.from("demo_posts").select("id,user_id,content,media_url,created_at").not("media_url","is",null).order("created_at",{ascending:false}).limit(50)
- ]);
- if(real.error||demo.error){box.textContent=(real.error||demo.error).message;return;}
- const posts=[...(real.data||[]).map(x=>({...x,isDemo:false})),...(demo.data||[]).map(x=>({...x,isDemo:true}))].sort((x,y)=>new Date(y.created_at)-new Date(x.created_at));
- if(!posts.length){box.innerHTML='<div class="post empty">Медиа пока нет. Добавь фото или видео к публикации в ленте.</div>';return;}
- const realIds=[...new Set((real.data||[]).map(x=>x.user_id))];
- const [pr,dp]=await Promise.all([
-  realIds.length?vpulse.from("profiles").select("id,display_name").in("id",realIds):Promise.resolve({data:[],error:null}),
-  vpulse.from("demo_profiles").select("id,display_name")
- ]);
- if(pr.error||dp.error){box.textContent=(pr.error||dp.error).message;return;}
- const names=new Map([...(pr.data||[]),...(dp.data||[])].map(x=>[x.id,x.display_name]));
- box.innerHTML=posts.map(x=>{const video=/\.(mp4|webm|mov|m4v)(\?|$)/i.test(x.media_url||"");return '<article class="post"><div class="posthead"><b>'+escV(names.get(x.user_id)||"Пользователь")+'</b>'+(x.isDemo?'<span class="small">ДЕМО</span>':'')+'</div><p>'+escV(x.content||"")+'</p>'+(video?'<video class="postimg" loading="lazy" controls playsinline src="'+escV(x.media_url)+'"></video>':'<img class="postimg" loading="lazy" src="'+escV(x.media_url)+'" alt="Фото публикации">')+'</article>';}).join("");
+ other.innerHTML='<h2>♫ Музыка</h2><div class="post"><b>Добавить музыку</b><p class="music-hint">Вставь ссылку на YouTube, Spotify, SoundCloud или прямую ссылку на MP3, M4A, AAC, OGG, WAV либо FLAC. Воспроизведение идёт через встроенный плеер источника.</p><form class="music-form" onsubmit="addMusicTrack(event)"><input id="musicTitle" maxlength="160" placeholder="Название трека (необязательно)"><input id="musicUrl" type="url" inputmode="url" placeholder="https://…" required><button class="btn" type="submit">＋ Добавить в мою музыку</button><div id="musicStatus" class="music-hint"></div></form></div><div id="musicTracks"><div class="empty">Загружаем твою музыку…</div></div>';
+ await loadMusicTracks();
+}
+async function addMusicTrack(event){
+ event.preventDefault();
+ const titleInput=document.getElementById("musicTitle"),urlInput=document.getElementById("musicUrl"),status=document.getElementById("musicStatus");
+ if(!vpulseUser){openAuth();status.textContent="Войди в аккаунт, чтобы сохранять музыку.";return;}
+ const parsed=musicProvider(urlInput.value.trim());
+ if(!parsed){status.textContent="Не удалось распознать источник. Проверь ссылку.";return;}
+ const title=titleInput.value.trim()||({youtube:"YouTube",spotify:"Spotify",soundcloud:"SoundCloud",audio:"Аудиотрек"}[parsed.provider]);
+ status.textContent="Добавляем…";
+ const {error}=await vpulse.from("music_tracks").insert({user_id:vpulseUser.id,title,source_url:parsed.url,provider:parsed.provider});
+ if(error){status.textContent="Ошибка: "+error.message;return;}
+ titleInput.value="";urlInput.value="";status.textContent="Трек добавлен в библиотеку.";
+ await loadMusicTracks();
+}
+async function loadMusicTracks(){
+ const box=document.getElementById("musicTracks");if(!box)return;
+ if(!vpulseUser){box.innerHTML='<div class="post empty">Войди в аккаунт, чтобы открыть свою музыкальную библиотеку.</div>';return;}
+ const {data,error}=await vpulse.from("music_tracks").select("id,title,source_url,provider,created_at").eq("user_id",vpulseUser.id).order("created_at",{ascending:false}).limit(100);
+ if(error){box.innerHTML='<div class="post empty">Не удалось загрузить музыку: '+escV(error.message)+'</div>';return;}
+ if(!data?.length){box.innerHTML='<div class="post empty">Пока пусто. Добавь первую песню по ссылке выше.</div>';return;}
+ box.innerHTML=data.map(t=>'<article class="music-track"><div class="music-track-head"><b>'+escV(t.title)+'</b><button class="music-delete" onclick="deleteMusicTrack(\''+escV(t.id)+'\')">Удалить</button></div>'+musicPlayer(t)+'<div class="music-hint" style="margin-top:8px">'+escV(({youtube:"YouTube",spotify:"Spotify",soundcloud:"SoundCloud",audio:"Аудиофайл"}[t.provider]||"Источник"))+'</div></article>').join("");
+}
+async function deleteMusicTrack(id){
+ if(!vpulseUser)return;
+ const {error}=await vpulse.from("music_tracks").delete().eq("id",id).eq("user_id",vpulseUser.id);
+ if(error){toast("Не удалось удалить: "+error.message);return;}
+ toast("Трек удалён");await loadMusicTracks();
 }
 const vpulseShowPage=showPage;
 let currentVPage="feed";
 showPage=function(page){
- if(!["feed","friends","videos","messages","profile"].includes(page))page="feed";
+ if(!["feed","friends","music","messages","profile"].includes(page))page="feed";
  currentVPage=page;
  vpulseShowPage(page);
  if(location.hash!=="#"+page)history.replaceState(null,"","#"+page);
  if(page==="friends")renderFriendsPage();
  if(page==="messages")renderMessagesPage();
- if(page==="videos")renderVideosPage();
+ if(page==="music")renderMusicPage();
 };
 // Восстанавливаем открытую вкладку после обновления страницы.
 const savedVPage=location.hash.replace(/^#/,"");
-showPage(["feed","friends","videos","messages","profile"].includes(savedVPage)?savedVPage:"feed");
+showPage(["feed","friends","music","messages","profile"].includes(savedVPage)?savedVPage:"feed");
 
 if(vpulse){vpulse.auth.onAuthStateChange((_event,session)=>setTimeout(()=>syncAuth(session,true),0));syncAuth();}else{toast("Не загрузился клиент Supabase");}
 </script></body></html>
