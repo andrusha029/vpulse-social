@@ -134,5 +134,82 @@ async function saveProfile(){
  document.getElementById("profileEditor").classList.add("hide");toast("Профиль сохранён");
 }
 
+
+async function renderFriendsPage(q=""){
+ const other=document.getElementById("other");if(!other)return;
+ other.innerHTML='<h2>Друзья</h2><div class="post"><input id="friendSearchDb" placeholder="Найти людей…" style="width:100%;background:#0e0a11;border:1px solid var(--line);border-radius:11px;padding:11px;color:white"><div id="friendsDbList" class="muted" style="padding:12px">Загружаем…</div></div>';
+ const input=document.getElementById("friendSearchDb");input.value=q;input.oninput=()=>loadFriendsDb(input.value);await loadFriendsDb(q);
+}
+async function loadFriendsDb(q=""){
+ const box=document.getElementById("friendsDbList");if(!box)return;
+ if(!vpulseUser){box.textContent="Войди в аккаунт, чтобы находить друзей.";return;}
+ const [u,f]=await Promise.all([
+  vpulse.from("profiles").select("id,display_name,username,avatar_url").neq("id",vpulseUser.id).limit(100),
+  vpulse.from("friendships").select("id,requester_id,addressee_id,status").or("requester_id.eq."+vpulseUser.id+",addressee_id.eq."+vpulseUser.id)
+ ]);
+ if(u.error||f.error){box.textContent=(u.error||f.error).message;return;}
+ const rels=f.data||[],needle=(q||"").toLowerCase();
+ const users=(u.data||[]).filter(x=>((x.display_name||"")+" "+(x.username||"")).toLowerCase().includes(needle));
+ if(!users.length){box.innerHTML='<div class="empty">Никого не найдено</div>';return;}
+ box.innerHTML=users.map(x=>{
+  const rel=rels.find(r=>(r.requester_id===x.id&&r.addressee_id===vpulseUser.id)||(r.addressee_id===x.id&&r.requester_id===vpulseUser.id));
+  let action='<button class="btn" onclick="sendFriendDb(\''+x.id+'\')">Добавить</button>';
+  if(rel?.status==="accepted")action='<span class="small">Уже друзья</span>';
+  else if(rel?.requester_id===vpulseUser.id)action='<span class="small">Заявка отправлена</span>';
+  else if(rel)action='<button class="btn" onclick="acceptFriendDb(\''+rel.id+'\')">Принять</button>';
+  return '<div class="person"><img src="'+escV(x.avatar_url||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100")+'"><div><b>'+escV(x.display_name||"Пользователь")+'</b><br><span class="small">@'+escV(x.username||"user")+'</span></div>'+action+'</div>';
+ }).join("");
+}
+async function sendFriendDb(id){
+ if(!vpulseUser){openAuth();return;}
+ const {error}=await vpulse.from("friendships").insert({requester_id:vpulseUser.id,addressee_id:id});
+ if(error){toast(error.code==="23505"?"Заявка уже отправлена":error.message);return;}
+ toast("Заявка отправлена");await loadFriendsDb(document.getElementById("friendSearchDb")?.value||"");
+}
+async function acceptFriendDb(id){
+ const {error}=await vpulse.from("friendships").update({status:"accepted"}).eq("id",id).eq("addressee_id",vpulseUser.id);
+ if(error){toast(error.message);return;}toast("Заявка принята");await loadFriendsDb(document.getElementById("friendSearchDb")?.value||"");
+}
+async function renderMessagesPage(){
+ const other=document.getElementById("other");if(!other)return;
+ other.innerHTML='<h2>Сообщения</h2><div class="post"><div id="messageComposeDb"></div><div id="messagesDbList">Загружаем переписки…</div></div>';
+ await loadMessagesDb();
+}
+async function loadMessagesDb(){
+ const compose=document.getElementById("messageComposeDb"),list=document.getElementById("messagesDbList");if(!compose||!list)return;
+ if(!vpulseUser){compose.textContent="Войди, чтобы отправлять сообщения.";list.innerHTML="";return;}
+ const [u,m]=await Promise.all([
+  vpulse.from("profiles").select("id,display_name,username").neq("id",vpulseUser.id).limit(100),
+  vpulse.from("messages").select("id,sender_id,recipient_id,content,created_at,read_at").or("sender_id.eq."+vpulseUser.id+",recipient_id.eq."+vpulseUser.id).order("created_at",{ascending:true}).limit(100)
+ ]);
+ if(u.error||m.error){list.textContent=(u.error||m.error).message;return;}
+ const users=u.data||[],messages=m.data||[],names=new Map(users.map(x=>[x.id,x.display_name||x.username||"Пользователь"]));
+ if(!users.length){compose.textContent="Пока нет других пользователей.";list.innerHTML="";return;}
+ compose.innerHTML='<label class="small">Кому</label><select id="messageRecipientDb" style="width:100%;background:#0e0a11;color:white;border:1px solid var(--line);border-radius:10px;padding:10px;margin:5px 0 10px">'+users.map(x=>'<option value="'+x.id+'">'+escV(x.display_name||x.username||"Пользователь")+'</option>').join("")+'</select><div style="display:flex;gap:8px"><input id="messageBodyDb" placeholder="Напиши сообщение…" style="flex:1;min-width:0;background:#0e0a11;color:white;border:1px solid var(--line);border-radius:10px;padding:10px"><button class="btn" onclick="sendMessageDb()">Отправить</button></div><hr style="border-color:var(--line);margin:16px 0">';
+ list.innerHTML=messages.length?messages.slice().reverse().map(x=>'<div class="post" style="padding:11px;margin:8px 0"><div class="small">'+escV(x.sender_id===vpulseUser.id?"Ты":names.get(x.sender_id)||"Пользователь")+' · '+new Date(x.created_at).toLocaleString("ru-RU")+'</div><div>'+escV(x.content)+'</div></div>').join(""):'<div class="empty">Сообщений пока нет</div>';
+ const unread=messages.filter(x=>x.recipient_id===vpulseUser.id&&!x.read_at).map(x=>x.id);
+ if(unread.length)await vpulse.from("messages").update({read_at:new Date().toISOString()}).in("id",unread);
+}
+async function sendMessageDb(){
+ if(!vpulseUser){openAuth();return;}
+ const recipient_id=document.getElementById("messageRecipientDb")?.value,content=document.getElementById("messageBodyDb")?.value.trim();
+ if(!recipient_id||!content)return;
+ const {error}=await vpulse.from("messages").insert({sender_id:vpulseUser.id,recipient_id,content});
+ if(error){toast(error.message);return;}
+ toast("Сообщение отправлено");await loadMessagesDb();
+}
+async function renderVideosPage(){
+ const other=document.getElementById("other");if(!other)return;
+ other.innerHTML='<h2>Видео и медиа</h2><div id="videosDbList">Загружаем публикации…</div>';
+ const box=document.getElementById("videosDbList");
+ const {data,error}=await vpulse.from("posts").select("id,user_id,content,media_url,created_at").not("media_url","is",null).order("created_at",{ascending:false}).limit(50);
+ if(error){box.textContent=error.message;return;}
+ if(!data?.length){box.innerHTML='<div class="post empty">Медиа пока нет. Добавь фото или видео к публикации в ленте.</div>';return;}
+ const ids=[...new Set(data.map(x=>x.user_id))],r=await vpulse.from("profiles").select("id,display_name").in("id",ids),names=new Map((r.data||[]).map(x=>[x.id,x.display_name]));
+ box.innerHTML=data.map(x=>{const video=/\.(mp4|webm|mov|m4v)(\?|$)/i.test(x.media_url||"");return '<article class="post"><b>'+escV(names.get(x.user_id)||"Пользователь")+'</b><p>'+escV(x.content||"")+'</p>'+(video?'<video class="postimg" controls playsinline src="'+escV(x.media_url)+'"></video>':'<img class="postimg" src="'+escV(x.media_url)+'">')+'</article>';}).join("");
+}
+const vpulseShowPage=showPage;
+showPage=function(page){vpulseShowPage(page);if(page==="friends")renderFriendsPage();if(page==="messages")renderMessagesPage();if(page==="videos")renderVideosPage();};
+
 if(vpulse){vpulse.auth.onAuthStateChange(()=>setTimeout(syncAuth,0));syncAuth();}else{toast("Не загрузился клиент Supabase");}
 </script></body></html>
