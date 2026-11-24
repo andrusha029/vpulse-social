@@ -16,13 +16,13 @@ create table if not exists public.profiles (
 
 create table if not exists public.posts (
   id uuid primary key default gen_random_uuid(),
-  author_id uuid not null references public.profiles(id) on delete cascade,
-  body text not null default '',
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  content text not null default '',
   media_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint post_has_content check (length(trim(body)) > 0 or media_url is not null),
-  constraint post_body_length check (char_length(body) <= 10000)
+  constraint post_has_content check (length(trim(content)) > 0 or media_url is not null),
+  constraint post_content_length check (char_length(content) <= 10000)
 );
 
 create table if not exists public.likes (
@@ -35,8 +35,8 @@ create table if not exists public.likes (
 create table if not exists public.comments (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.posts(id) on delete cascade,
-  author_id uuid not null references public.profiles(id) on delete cascade,
-  body text not null check (char_length(trim(body)) between 1 and 3000),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  content text not null check (char_length(trim(content)) between 1 and 3000),
   created_at timestamptz not null default now()
 );
 
@@ -44,7 +44,7 @@ create table if not exists public.friendships (
   id uuid primary key default gen_random_uuid(),
   requester_id uuid not null references public.profiles(id) on delete cascade,
   addressee_id uuid not null references public.profiles(id) on delete cascade,
-  status text not null default 'pending' check (status in ('pending','accepted','declined','blocked')),
+  status text not null default 'pending' check (status in ('pending','accepted','rejected')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint friendship_not_self check (requester_id <> addressee_id),
@@ -55,14 +55,14 @@ create table if not exists public.messages (
   id uuid primary key default gen_random_uuid(),
   sender_id uuid not null references public.profiles(id) on delete cascade,
   recipient_id uuid not null references public.profiles(id) on delete cascade,
-  body text not null check (char_length(trim(body)) between 1 and 10000),
+  content text not null check (char_length(trim(content)) between 1 and 10000),
   created_at timestamptz not null default now(),
   read_at timestamptz,
   constraint message_not_self check (sender_id <> recipient_id)
 );
 
 create index if not exists posts_created_at_idx on public.posts (created_at desc);
-create index if not exists posts_author_created_idx on public.posts (author_id, created_at desc);
+create index if not exists posts_user_created_idx on public.posts (user_id, created_at desc);
 create index if not exists comments_post_created_idx on public.comments (post_id, created_at);
 create index if not exists messages_conversation_idx on public.messages (sender_id, recipient_id, created_at desc);
 create index if not exists friendships_addressee_status_idx on public.friendships (addressee_id, status);
@@ -126,7 +126,7 @@ alter table public.messages enable row level security;
 -- Profiles: visible to signed-in users; users may edit only their own profile.
 drop policy if exists "Profiles are viewable by authenticated users" on public.profiles;
 create policy "Profiles are viewable by authenticated users"
-on public.profiles for select to authenticated using (true);
+on public.profiles for select using (true);
 drop policy if exists "Users can insert their own profile" on public.profiles;
 create policy "Users can insert their own profile"
 on public.profiles for insert to authenticated with check (auth.uid() = id);
@@ -137,21 +137,21 @@ on public.profiles for update to authenticated using (auth.uid() = id) with chec
 -- Posts: signed-in users can read; authors create/update/delete their own posts.
 drop policy if exists "Posts are viewable by authenticated users" on public.posts;
 create policy "Posts are viewable by authenticated users"
-on public.posts for select to authenticated using (true);
+on public.posts for select using (true);
 drop policy if exists "Users can create their own posts" on public.posts;
 create policy "Users can create their own posts"
-on public.posts for insert to authenticated with check (auth.uid() = author_id);
+on public.posts for insert to authenticated with check (auth.uid() = user_id);
 drop policy if exists "Authors can update their own posts" on public.posts;
 create policy "Authors can update their own posts"
-on public.posts for update to authenticated using (auth.uid() = author_id) with check (auth.uid() = author_id);
+on public.posts for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "Authors can delete their own posts" on public.posts;
 create policy "Authors can delete their own posts"
-on public.posts for delete to authenticated using (auth.uid() = author_id);
+on public.posts for delete to authenticated using (auth.uid() = user_id);
 
 -- Likes: visible to signed-in users; a user controls only their own likes.
 drop policy if exists "Likes are viewable by authenticated users" on public.likes;
 create policy "Likes are viewable by authenticated users"
-on public.likes for select to authenticated using (true);
+on public.likes for select using (true);
 drop policy if exists "Users can like as themselves" on public.likes;
 create policy "Users can like as themselves"
 on public.likes for insert to authenticated with check (auth.uid() = user_id);
@@ -162,16 +162,16 @@ on public.likes for delete to authenticated using (auth.uid() = user_id);
 -- Comments: visible to signed-in users; users may create/edit/delete their own comments.
 drop policy if exists "Comments are viewable by authenticated users" on public.comments;
 create policy "Comments are viewable by authenticated users"
-on public.comments for select to authenticated using (true);
+on public.comments for select using (true);
 drop policy if exists "Users can create their own comments" on public.comments;
 create policy "Users can create their own comments"
-on public.comments for insert to authenticated with check (auth.uid() = author_id);
+on public.comments for insert to authenticated with check (auth.uid() = user_id);
 drop policy if exists "Authors can update their own comments" on public.comments;
 create policy "Authors can update their own comments"
-on public.comments for update to authenticated using (auth.uid() = author_id) with check (auth.uid() = author_id);
+on public.comments for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "Authors can delete their own comments" on public.comments;
 create policy "Authors can delete their own comments"
-on public.comments for delete to authenticated using (auth.uid() = author_id);
+on public.comments for delete to authenticated using (auth.uid() = user_id);
 
 -- Friendship participants can see and update requests involving them.
 drop policy if exists "Users can view their friendship requests" on public.friendships;
