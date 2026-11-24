@@ -62,36 +62,45 @@ function openAuth(){document.getElementById("authModal").classList.add("open");d
 function closeAuth(){document.getElementById("authModal").classList.remove("open");}
 function toggleAuthMode(){authMode=authMode==="login"?"signup":"login";document.getElementById("authTitle").textContent=authMode==="login"?"Войти в V PULSE":"Создать аккаунт";document.getElementById("authSubmit").textContent=authMode==="login"?"Войти":"Зарегистрироваться";document.getElementById("authSwitch").textContent=authMode==="login"?"Регистрация":"У меня есть аккаунт";document.getElementById("authName").classList.toggle("hide",authMode==="login");document.getElementById("authStatus").textContent="";}
 async function submitAuth(){if(!vpulse)return;const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value,name=document.getElementById("authName").value.trim(),status=document.getElementById("authStatus");if(!email||!password){status.textContent="Укажи почту и пароль.";return;}if(password.length<6){status.textContent="Пароль должен содержать минимум 6 символов.";return;}status.textContent="Подключаем…";const r=authMode==="signup"?await vpulse.auth.signUp({email,password,options:{data:{display_name:name||email.split("@")[0]},emailRedirectTo:window.location.origin+"/vpulse-social/"}}):await vpulse.auth.signInWithPassword({email,password});if(r.error){status.textContent=r.error.message;return;}if(authMode==="signup"&&!r.data.session){status.textContent="Аккаунт создан. Проверь почту и подтверди регистрацию, затем войди.";return;}closeAuth();toast("Готово!");await syncAuth();}
-async function syncAuth(){if(!vpulse)return;const {data}=await vpulse.auth.getSession();vpulseUser=data.session?.user||null;const b=document.getElementById("authButton");if(b){b.textContent=vpulseUser?(vpulseUser.user_metadata?.display_name||vpulseUser.email.split("@")[0])+" · Выйти":"Войти";b.onclick=vpulseUser?logoutV:openAuth;}const d=document.getElementById("draft");if(d)d.placeholder=vpulseUser?"Что у тебя нового?":"Войди, чтобы публиковать записи…";await loadVPosts();if(currentVPage==="profile")await loadMyProfile();}
+async function syncAuth(session,hasSession=false){if(!vpulse)return;let activeSession=session;if(!hasSession){const {data,error}=await vpulse.auth.getSession();if(error){console.error("V PULSE session restore:",error);toast("Не удалось восстановить вход. Обнови страницу.");return;}activeSession=data.session;}vpulseUser=activeSession?.user||null;const b=document.getElementById("authButton");if(b){b.textContent=vpulseUser?(vpulseUser.user_metadata?.display_name||vpulseUser.email?.split("@")[0]||"Мой аккаунт")+" · Выйти":"Войти";b.onclick=vpulseUser?logoutV:openAuth;}const d=document.getElementById("draft");if(d)d.placeholder=vpulseUser?"Что у тебя нового?":"Войди, чтобы публиковать записи…";await loadVPosts();if(currentVPage==="profile")await loadMyProfile();}
 async function logoutV(){await vpulse.auth.signOut();await syncAuth();toast("Ты вышел из аккаунта");}
 function escV(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 async function loadVPosts(){
  if(!vpulse)return;
  const feed=document.getElementById("feed");if(!feed)return;
- const {data:posts,error}=await vpulse.from("posts").select("id,user_id,content,media_url,created_at").order("created_at",{ascending:false}).limit(50);
- if(error){feed.innerHTML='<div class="post empty"><h3>Не удалось загрузить ленту</h3><p>'+escV(error.message)+'</p><button class="btn" onclick="loadVPosts()">Повторить</button></div>';return;}
- if(!posts?.length){feed.innerHTML='<div class="post empty"><h3>Пока нет публикаций</h3><p>Стань первым — поделись новостью!</p></div>';return;}
- const ids=posts.map(p=>p.id),userIds=[...new Set(posts.map(p=>p.user_id))];
- const [pr,lr,cr]=await Promise.all([
-  vpulse.from("profiles").select("id,display_name,username,avatar_url").in("id",userIds),
-  vpulse.from("likes").select("post_id,user_id").in("post_id",ids),
-  vpulse.from("comments").select("id,post_id,user_id,content,created_at").in("post_id",ids).order("created_at",{ascending:true})
+ const [realResult,demoResult]=await Promise.all([
+  vpulse.from("posts").select("id,user_id,content,media_url,created_at").order("created_at",{ascending:false}).limit(50),
+  vpulse.from("demo_posts").select("id,user_id,content,media_url,likes_count,created_at").order("created_at",{ascending:false}).limit(50)
  ]);
- const errors=[pr.error,lr.error,cr.error].filter(Boolean);
+ if(realResult.error){feed.innerHTML='<div class="post empty"><h3>Не удалось загрузить ленту</h3><p>'+escV(realResult.error.message)+'</p><button class="btn" onclick="loadVPosts()">Повторить</button></div>';return;}
+ const realPosts=(realResult.data||[]).map(p=>({...p,isDemo:false}));
+ const demoPosts=(demoResult.data||[]).map(p=>({...p,isDemo:true}));
+ const posts=[...realPosts,...demoPosts].sort((x,y)=>new Date(y.created_at)-new Date(x.created_at)).slice(0,60);
+ if(!posts.length){feed.innerHTML='<div class="post empty"><h3>Пока нет публикаций</h3><p>Стань первым — поделись новостью!</p></div>';return;}
+ const realIds=realPosts.map(p=>p.id),userIds=[...new Set(realPosts.map(p=>p.user_id))];
+ const [pr,dp,lr,cr]=await Promise.all([
+  userIds.length?vpulse.from("profiles").select("id,display_name,username,avatar_url").in("id",userIds):Promise.resolve({data:[],error:null}),
+  vpulse.from("demo_profiles").select("id,display_name,username,avatar_url"),
+  realIds.length?vpulse.from("likes").select("post_id,user_id").in("post_id",realIds):Promise.resolve({data:[],error:null}),
+  realIds.length?vpulse.from("comments").select("id,post_id,user_id,content,created_at").in("post_id",realIds).order("created_at",{ascending:true}):Promise.resolve({data:[],error:null})
+ ]);
+ const errors=[pr.error,dp.error,lr.error,cr.error].filter(Boolean);
  if(errors.length){feed.innerHTML='<div class="post empty"><h3>Ошибка загрузки данных</h3><p>'+escV(errors[0].message)+'</p><button class="btn" onclick="loadVPosts()">Повторить</button></div>';return;}
  const commentUserIds=[...new Set((cr.data||[]).map(x=>x.user_id))];
  const commentProfiles=commentUserIds.length?(await vpulse.from("profiles").select("id,display_name,username").in("id",commentUserIds)).data||[]:[];
- const profiles=new Map((pr.data||[]).map(x=>[x.id,x])),cp=new Map(commentProfiles.map(x=>[x.id,x]));
+ const profiles=new Map([...(pr.data||[]),...(dp.data||[])].map(x=>[x.id,x])),cp=new Map(commentProfiles.map(x=>[x.id,x]));
  const likes=lr.data||[],comments=cr.data||[];
  feed.innerHTML="";
  posts.forEach(p=>{
-  const author=profiles.get(p.user_id)||{},mine=likes.filter(x=>x.post_id===p.id),pc=comments.filter(x=>x.post_id===p.id);
+  const author=profiles.get(p.user_id)||{},mine=p.isDemo?[]:likes.filter(x=>x.post_id===p.id),pc=p.isDemo?[]:comments.filter(x=>x.post_id===p.id);
   const liked=!!vpulseUser&&mine.some(x=>x.user_id===vpulseUser.id),n=author.display_name||author.username||"Пользователь";
   const av=author.avatar_url||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop";
   const media=p.media_url||"",isVideo=/\.(mp4|webm|mov|m4v)(\?|$)/i.test(media);
-  const mediaHtml=media?(isVideo?'<video class="postimg" controls playsinline src="'+escV(media)+'"></video>':'<img class="postimg" src="'+escV(media)+'" alt="Вложение">'):"";
+  const mediaHtml=media?(isVideo?'<video class="postimg" controls playsinline preload="metadata" src="'+escV(media)+'"></video>':'<img class="postimg" loading="lazy" src="'+escV(media)+'" alt="Вложение">'):"";
   const a=document.createElement("article");a.className="post";a.dataset.id=p.id;a.dataset.search=(p.content||"").toLowerCase();
-  a.innerHTML='<div class="posthead"><img class="avatar" src="'+escV(av)+'"><div class="meta"><div class="postname">'+escV(n)+'</div><div class="small">'+new Date(p.created_at).toLocaleString("ru-RU")+'</div></div></div><div class="posttext">'+escV(p.content||"")+'</div>'+mediaHtml+'<div class="postactions"><button class="action '+(liked?"liked":"")+'" onclick="likeDb(this)">'+(liked?"♥":"♡")+' <span>'+mine.length+'</span></button><button class="action" onclick="toggleComments(this)">▢ Комментарии '+pc.length+'</button><button class="action" onclick="sharePost()">↗ Поделиться</button></div><div class="commentbox"><input placeholder="Написать комментарий…"><button class="btn" onclick="addCommentDb(this)">➤</button></div><div class="comments">'+pc.map(x=>{const u=cp.get(x.user_id)||{};return '<div><b>'+escV(u.display_name||u.username||"Пользователь")+':</b> '+escV(x.content)+'</div>';}).join("")+'</div>';
+  const actions=p.isDemo?'<span class="action" aria-label="Демонстрационная публикация">♥ '+Number(p.likes_count||0)+'</span><span class="action">▢ Комментарии</span><span class="small">ДЕМО</span>':'<button class="action '+(liked?"liked":"")+'" onclick="likeDb(this)">'+(liked?"♥":"♡")+' <span>'+mine.length+'</span></button><button class="action" onclick="toggleComments(this)">▢ Комментарии '+pc.length+'</button><button class="action" onclick="sharePost()">↗ Поделиться</button>';
+  const commentBox=p.isDemo?'':'<div class="commentbox"><input placeholder="Написать комментарий…"><button class="btn" onclick="addCommentDb(this)">➤</button></div><div class="comments">'+pc.map(x=>{const u=cp.get(x.user_id)||{};return '<div><b>'+escV(u.display_name||u.username||"Пользователь")+':</b> '+escV(x.content)+'</div>';}).join("")+'</div>';
+  a.innerHTML='<div class="posthead"><img class="avatar" loading="lazy" src="'+escV(av)+'" alt=""><div class="meta"><div class="postname">'+escV(n)+'</div><div class="small">'+new Date(p.created_at).toLocaleString("ru-RU")+'</div></div></div><div class="posttext">'+escV(p.content||"")+'</div>'+mediaHtml+'<div class="postactions">'+actions+'</div>'+commentBox;
   feed.append(a);
  });
 }
@@ -125,7 +134,7 @@ async function loadMyProfile(){
  if(!vpulseUser){document.getElementById("myProfileName").textContent="Загружаем профиль…";document.getElementById("myProfileBio").textContent="Проверяем авторизацию.";return;}
  const {data,error}=await vpulse.from("profiles").select("id,username,display_name,avatar_url,bio").eq("id",vpulseUser.id).maybeSingle();
  if(error){document.getElementById("myProfileBio").textContent="Ошибка загрузки: "+error.message;return;}
- cachedMyProfile=data||{id:vpulseUser.id,display_name:vpulseUser.user_metadata?.display_name||vpulseUser.email.split("@")[0],username:"",bio:"",avatar_url:""};
+ if(!data){const fallback={id:vpulseUser.id,display_name:vpulseUser.user_metadata?.display_name||vpulseUser.email?.split("@")[0]||"Пользователь",username:"",bio:"",avatar_url:""};const created=await vpulse.from("profiles").upsert(fallback,{onConflict:"id"}).select("id,username,display_name,avatar_url,bio").single();if(created.error){document.getElementById("myProfileBio").textContent="Не удалось создать профиль: "+created.error.message;return;}cachedMyProfile=created.data;}else cachedMyProfile=data;
  const avatar=cachedMyProfile.avatar_url||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200";
  document.getElementById("myProfileName").textContent=cachedMyProfile.display_name||"Пользователь";
  document.getElementById("myProfileBio").textContent=cachedMyProfile.bio||("@"+(cachedMyProfile.username||"пользователь"));
@@ -164,7 +173,7 @@ async function saveProfile(){
   avatar_url=vpulse.storage.from("vpulse-media").getPublicUrl(path).data.publicUrl;
  }
  const payload={display_name,username:username||null,bio,avatar_url};
- const {error}=await vpulse.from("profiles").update(payload).eq("id",vpulseUser.id);
+ const {error}=await vpulse.from("profiles").upsert({id:vpulseUser.id,...payload},{onConflict:"id"});
  if(error){status.textContent=error.code==="23505"?"Это имя пользователя уже занято.":error.message;return;}
  cachedMyProfile={...cachedMyProfile,...payload};
  document.getElementById("myProfileName").textContent=display_name;
@@ -261,5 +270,5 @@ showPage=function(page){
 const savedVPage=location.hash.replace(/^#/,"");
 showPage(["feed","friends","videos","messages","profile"].includes(savedVPage)?savedVPage:"feed");
 
-if(vpulse){vpulse.auth.onAuthStateChange(()=>setTimeout(syncAuth,0));syncAuth();}else{toast("Не загрузился клиент Supabase");}
+if(vpulse){vpulse.auth.onAuthStateChange((_event,session)=>setTimeout(()=>syncAuth(session,true),0));syncAuth();}else{toast("Не загрузился клиент Supabase");}
 </script></body></html>
