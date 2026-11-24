@@ -13,7 +13,7 @@
 .authmodal.open{display:flex}.authcard{width:min(420px,100%);background:#17101b;border:1px solid #663052;border-radius:22px;padding:22px}
 .authcard input{width:100%;margin:8px 0;background:#0d0911;border:1px solid var(--line);border-radius:12px;padding:12px;color:#fff}
 .authrow{display:flex;gap:8px;margin-top:12px}.authrow button{flex:1}.authclose{float:right;background:none;border:0;color:#cbb8cb;font-size:22px}.authstatus{font-size:13px;color:#ff9bce;min-height:22px;margin-top:10px}.profile-edit{margin-top:14px;text-align:left}.profile-edit label{display:block;color:#cbb8cb;font-size:12px;margin:10px 0 5px}.profile-edit input,.profile-edit textarea{width:100%;background:#0d0911;border:1px solid var(--line);border-radius:11px;padding:11px;color:#fff;outline:none}.profile-edit textarea{min-height:85px;resize:vertical}.profile-edit .btn{margin-top:12px}
-</style></head>
+ .story-upload{position:relative}.story-add{position:absolute;right:-2px;bottom:2px;width:21px;height:21px;border-radius:50%;background:var(--pink);border:2px solid #100b12;color:#fff;font-weight:900;line-height:16px}.story-viewer{position:fixed;inset:0;background:#050308f2;z-index:80;display:none;align-items:center;justify-content:center;padding:16px}.story-viewer.open{display:flex}.story-frame{position:relative;width:min(430px,100%);height:min(780px,92dvh);background:#120d16;border:1px solid #663052;border-radius:22px;overflow:hidden;display:flex;align-items:center;justify-content:center}.story-photo{width:100%;height:100%;object-fit:contain;background:#08060a}.story-top{position:absolute;top:12px;left:12px;right:55px;z-index:3;display:flex;align-items:center;gap:9px;text-shadow:0 1px 8px #000}.story-top img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid white}.story-top strong{flex:1}.story-top .small{color:white}.story-progress{position:absolute;top:7px;left:10px;right:10px;display:flex;gap:4px;z-index:4}.story-progress i{height:3px;flex:1;background:#ffffff55;border-radius:4px}.story-progress i.done{background:#fff}.story-nav{position:absolute;inset:50% 0 auto;display:flex;justify-content:space-between;transform:translateY(-50%);z-index:2;pointer-events:none}.story-nav button{pointer-events:auto;margin:0 8px;border:0;border-radius:50%;width:38px;height:38px;background:#08060a88;color:white;font-size:23px}.story-close{position:absolute;top:12px;right:12px;z-index:5;border:0;background:#130d18b8;color:white;border-radius:50%;width:36px;height:36px;font-size:22px}.story-empty{font-size:12px;color:var(--muted);padding:8px 0 0 4px}@media(max-width:650px){.story-frame{height:calc(100dvh - 24px);width:100%;border-radius:16px}}\n</style></head>
 <body>
 <header class="top"><div class="topin"><a class="brand" href="#" onclick="showPage('feed');return false">V <b>PULSE</b></a><div class="search"><input id="search" type="search" name="vpulse_global_search" placeholder="Поиск людей и публикаций…" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="search" oninput="searchPosts(this.value)"></div><div class="topactions"><button class="ic" onclick="toast('Уведомления скоро появятся')">♧</button><button class="ic" onclick="showPage('messages')">✉</button><button class="authbtn" id="authButton" onclick="openAuth()">Войти</button></div></div></header>
 <div class="layout">
@@ -26,7 +26,7 @@
 </div><div class="widget mini"><div class="eyebrow">V PULSE</div><b>Твой мир. Твой пульс.</b><p class="small">Делись моментами и оставайся на связи.</p></div></aside>
 <main id="main">
 <section class="welcome"><div class="eyebrow">СОЦИАЛЬНАЯ СЕТЬ НОВОГО ПОКОЛЕНИЯ</div><h1>Твой мир.<br><span style="color:var(--pink)">Твой пульс.</span></h1><p>Общайся, делись моментами и находи людей по интересам.</p></section>
-<div class="stories"><button class="story" onclick="toast('Истории появятся после подключения загрузки фото')"><div class="ring"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop" alt=""></div>＋ Ваша</button><button class="story" onclick="toast('Истории скоро будут доступны')"><div class="ring"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop" alt=""></div>Максим</button><button class="story" onclick="toast('Истории скоро будут доступны')"><div class="ring"><img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=120&h=120&fit=crop" alt=""></div>Алина</button><button class="story" onclick="toast('Истории скоро будут доступны')"><div class="ring"><img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&h=120&fit=crop" alt=""></div>Денис</button><button class="story" onclick="toast('Истории скоро будут доступны')"><div class="ring"><img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&h=120&fit=crop" alt=""></div>Настя</button></div>
+<div class="stories" id="storiesList"><button class="story story-upload" onclick="openMyStoryOrUpload()"><div class="ring"><img id="myStoryAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop" alt="Моя история"><span class="story-add">＋</span></div><span id="myStoryLabel">＋ Ваша</span></button><div id="otherStories" style="display:flex;gap:13px"></div><input id="storyFile" type="file" accept="image/*" hidden onchange="uploadStory(this)"></div>
 <div class="composer"><div class="composehead"><img class="avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt=""><div><b>Поделись новостью</b><div class="small">Что у тебя нового?</div></div></div><textarea id="draft" placeholder="Напиши что-нибудь интересное…"></textarea><div class="composefoot"><label class="small" style="cursor:pointer">＋ Фото / Видео <input id="mediaFile" type="file" accept="image/*,video/*" style="display:none" onchange="updateMediaName(this)"></label><span id="mediaLabel" class="small"></span><button class="btn" onclick="publish()">Опубликовать</button></div></div>
 <div id="feed">
 <article class="post" data-search="александр закат прекрасный вечер новосибирск"><div class="posthead"><img class="avatar" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop" alt=""><div class="meta"><div class="postname">Александр <span style="color:var(--pink)">✓</span></div><div class="small">15 минут назад · Новосибирск</div></div><button class="action" onclick="toast('Дополнительные действия скоро появятся')">•••</button></div><div class="posttext">Какой сегодня красивый вечер! Иногда нужно просто остановиться и насладиться моментом. 🌆</div><img class="postimg" src="https://images.unsplash.com/photo-1472120435266-53107fd0c44a?w=1000&auto=format&fit=crop" alt="Закат над природой"><div class="postactions"><button class="action" onclick="like(this)">♡ <span>128</span></button><button class="action" onclick="toggleComments(this)">▢ Комментарии 14</button><button class="action" onclick="sharePost()">↗ Поделиться</button></div><div class="commentbox"><input placeholder="Написать комментарий…"><button class="btn" onclick="addComment(this)">➤</button></div><div class="comments"></div></article>
@@ -35,7 +35,7 @@
 </main>
 <aside class="right"><div class="widget"><h3>🔥 Сейчас обсуждают</h3><div class="trend"><span class="small">Тема дня</span><strong>#V PULSE</strong><span class="small">Наша новая соцсеть</span></div><div class="trend"><span class="small">Популярное</span><strong>#ХорошееНастроение</strong><span class="small">2,4 тыс. публикаций</span></div><div class="trend"><span class="small">Обсуждают</span><strong>#Путешествия</strong><span class="small">986 публикаций</span></div></div><div class="widget"><h3>Возможно, знакомы</h3><div class="person"><img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop"><div><b>Денис</b><br><span class="small">Общие интересы</span></div><button onclick="this.textContent='Отправлено'">＋</button></div><div class="person"><img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&h=100&fit=crop"><div><b>Настя</b><br><span class="small">Новый участник</span></div><button onclick="this.textContent='Отправлено'">＋</button></div></div></aside>
 </div>
-<nav class="tabs"><button class="active" data-page="feed" onclick="showPage('feed')"><span>⌂</span>Лента</button><button data-page="friends" onclick="showPage('friends')"><span>♧</span>Друзья</button><button data-page="videos" onclick="showPage('videos')"><span>▷</span>Видео</button><button data-page="messages" onclick="showPage('messages')"><span>✉</span>Чаты</button><button data-page="profile" onclick="showPage('profile')"><span>◉</span>Профиль</button></nav><div id="toast" class="toast"></div>
+<nav class="tabs"><button class="active" data-page="feed" onclick="showPage('feed')"><span>⌂</span>Лента</button><button data-page="friends" onclick="showPage('friends')"><span>♧</span>Друзья</button><button data-page="videos" onclick="showPage('videos')"><span>▷</span>Видео</button><button data-page="messages" onclick="showPage('messages')"><span>✉</span>Чаты</button><button data-page="profile" onclick="showPage('profile')"><span>◉</span>Профиль</button></nav><div id="toast" class="toast"></div><div id="storyViewer" class="story-viewer" onclick="if(event.target===this)closeStoryViewer()"><div class="story-frame"><div class="story-progress" id="storyProgress"></div><div class="story-top"><img id="storyAuthorAvatar" src="" alt=""><strong id="storyAuthorName"></strong><span id="storyAge" class="small"></span></div><button class="story-close" onclick="closeStoryViewer()">×</button><img id="storyPhoto" class="story-photo" src="" alt="История"><div class="story-nav"><button onclick="previousStory()">‹</button><button onclick="nextStory()">›</button></div></div></div>
 <div id="authModal" class="authmodal" onclick="if(event.target===this)closeAuth()"><div class="authcard">
 <button class="authclose" onclick="closeAuth()">×</button><div class="eyebrow">V PULSE ACCOUNT</div><h2 id="authTitle">Войти в V PULSE</h2><p class="muted small">Твой профиль, публикации и друзья — теперь в одном месте.</p>
 <input id="authName" placeholder="Как тебя зовут" autocomplete="name" class="hide">
@@ -62,7 +62,7 @@ function openAuth(){document.getElementById("authModal").classList.add("open");d
 function closeAuth(){document.getElementById("authModal").classList.remove("open");}
 function toggleAuthMode(){authMode=authMode==="login"?"signup":"login";document.getElementById("authTitle").textContent=authMode==="login"?"Войти в V PULSE":"Создать аккаунт";document.getElementById("authSubmit").textContent=authMode==="login"?"Войти":"Зарегистрироваться";document.getElementById("authSwitch").textContent=authMode==="login"?"Регистрация":"У меня есть аккаунт";document.getElementById("authName").classList.toggle("hide",authMode==="login");document.getElementById("authStatus").textContent="";}
 async function submitAuth(){if(!vpulse)return;const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value,name=document.getElementById("authName").value.trim(),status=document.getElementById("authStatus");if(!email||!password){status.textContent="Укажи почту и пароль.";return;}if(password.length<6){status.textContent="Пароль должен содержать минимум 6 символов.";return;}status.textContent="Подключаем…";const r=authMode==="signup"?await vpulse.auth.signUp({email,password,options:{data:{display_name:name||email.split("@")[0]},emailRedirectTo:window.location.origin+"/vpulse-social/"}}):await vpulse.auth.signInWithPassword({email,password});if(r.error){status.textContent=r.error.message;return;}if(authMode==="signup"&&!r.data.session){status.textContent="Аккаунт создан. Проверь почту и подтверди регистрацию, затем войди.";return;}closeAuth();toast("Готово!");await syncAuth();}
-async function syncAuth(session,hasSession=false){if(!vpulse)return;let activeSession=session;if(!hasSession){const {data,error}=await vpulse.auth.getSession();if(error){console.error("V PULSE session restore:",error);toast("Не удалось восстановить вход. Обнови страницу.");return;}activeSession=data.session;}vpulseUser=activeSession?.user||null;const b=document.getElementById("authButton");if(b){b.textContent=vpulseUser?(vpulseUser.user_metadata?.display_name||vpulseUser.email?.split("@")[0]||"Мой аккаунт")+" · Выйти":"Войти";b.onclick=vpulseUser?logoutV:openAuth;}const d=document.getElementById("draft");if(d)d.placeholder=vpulseUser?"Что у тебя нового?":"Войди, чтобы публиковать записи…";await loadVPosts();if(currentVPage==="profile")await loadMyProfile();}
+async function syncAuth(session,hasSession=false){if(!vpulse)return;let activeSession=session;if(!hasSession){const {data,error}=await vpulse.auth.getSession();if(error){console.error("V PULSE session restore:",error);toast("Не удалось восстановить вход. Обнови страницу.");return;}activeSession=data.session;}vpulseUser=activeSession?.user||null;const b=document.getElementById("authButton");if(b){b.textContent=vpulseUser?(vpulseUser.user_metadata?.display_name||vpulseUser.email?.split("@")[0]||"Мой аккаунт")+" · Выйти":"Войти";b.onclick=vpulseUser?logoutV:openAuth;}const d=document.getElementById("draft");if(d)d.placeholder=vpulseUser?"Что у тебя нового?":"Войди, чтобы публиковать записи…";await loadVPosts();await loadStories();if(currentVPage==="profile")await loadMyProfile();}
 async function logoutV(){await vpulse.auth.signOut();await syncAuth();toast("Ты вышел из аккаунта");}
 function escV(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 async function loadVPosts(){
@@ -124,7 +124,70 @@ async function publish(){
  if(document.getElementById("mediaLabel"))document.getElementById("mediaLabel").textContent="";
  await loadVPosts();toast("Публикация сохранена в облаке!");
 }
-async function likeDb(b){if(!vpulseUser){openAuth();return;}const id=b.closest(".post")?.dataset.id;if(!id)return;const old=b.classList.contains("liked"),r=old?await vpulse.from("likes").delete().eq("post_id",id).eq("user_id",vpulseUser.id):await vpulse.from("likes").insert({post_id:id,user_id:vpulseUser.id});if(r.error){toast(r.error.message);return;}await loadVPosts();}
+
+let vpulseStories=[],storyGroups=new Map(),storyViewerUser=null,storyViewerIndex=0;
+async function loadStories(){
+ if(!vpulse)return;
+ const {data,error}=await vpulse.from("stories").select("id,user_id,media_url,created_at,expires_at").gt("expires_at",new Date().toISOString()).order("created_at",{ascending:true}).limit(300);
+ if(error){console.warn("V PULSE stories:",error.message);return;}
+ vpulseStories=data||[];storyGroups=new Map();
+ vpulseStories.forEach(s=>{if(!storyGroups.has(s.user_id))storyGroups.set(s.user_id,[]);storyGroups.get(s.user_id).push(s);});
+ await renderStories();
+}
+async function renderStories(){
+ const other=document.getElementById("otherStories"),myAvatar=document.getElementById("myStoryAvatar"),myLabel=document.getElementById("myStoryLabel");
+ if(!other)return;
+ const ids=[...storyGroups.keys()],lookup=[...ids,...(vpulseUser?[vpulseUser.id]:[])];
+ const {data}=lookup.length?await vpulse.from("profiles").select("id,display_name,username,avatar_url").in("id",lookup):{data:[]};
+ window.vpulseProfiles=new Map((data||[]).map(p=>[p.id,p]));
+ const own=vpulseUser?storyGroups.get(vpulseUser.id)||[]:[];
+ const ownProfile=window.vpulseProfiles.get(vpulseUser?.id)||{};
+ if(myAvatar&&ownProfile.avatar_url)myAvatar.src=ownProfile.avatar_url;
+ if(myLabel)myLabel.textContent=own.length?"Ваша история":"＋ Ваша";
+ other.innerHTML="";
+ const others=ids.filter(id=>!vpulseUser||id!==vpulseUser.id);
+ if(!others.length){other.innerHTML='<div class="story-empty">Истории друзей появятся здесь</div>';return;}
+ other.innerHTML=others.map(id=>{
+  const p=window.vpulseProfiles.get(id)||{};
+  return '<button class="story" onclick="openStory(\''+id+'\')"><div class="ring"><img loading="lazy" src="'+escV(p.avatar_url||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop")+'" alt=""></div>'+escV(p.display_name||p.username||"Пользователь")+'</button>';
+ }).join("");
+}
+function openMyStoryOrUpload(){
+ if(!vpulseUser){openAuth();toast("Войди, чтобы добавить историю");return;}
+ const own=storyGroups.get(vpulseUser.id)||[];
+ if(own.length){openStory(vpulseUser.id);return;}
+ document.getElementById("storyFile")?.click();
+}
+async function uploadStory(input){
+ const file=input.files?.[0];input.value="";if(!file)return;
+ if(!vpulseUser){openAuth();return;}
+ if(!file.type.startsWith("image/")){toast("Для истории выбери фотографию");return;}
+ if(file.size>10*1024*1024){toast("Фото для истории должно быть до 10 МБ");return;}
+ toast("Загружаем историю…");
+ const ext=(file.name.split(".").pop()||"jpg").replace(/[^a-z0-9]/gi,"").toLowerCase()||"jpg";
+ const path=vpulseUser.id+"/stories/"+Date.now()+"."+ext;
+ const up=await vpulse.storage.from("vpulse-media").upload(path,file,{upsert:false,contentType:file.type});
+ if(up.error){toast("Не удалось загрузить фото: "+up.error.message);return;}
+ const media_url=vpulse.storage.from("vpulse-media").getPublicUrl(path).data.publicUrl;
+ const {error}=await vpulse.from("stories").insert({user_id:vpulseUser.id,media_url});
+ if(error){await vpulse.storage.from("vpulse-media").remove([path]);toast("Не удалось сохранить историю: "+error.message);return;}
+ await loadStories();const own=storyGroups.get(vpulseUser.id)||[];toast("История опубликована на 24 часа");if(own.length)openStory(vpulseUser.id,own.length-1);
+}
+function openStory(userId,index=0){const items=storyGroups.get(userId)||[];if(!items.length)return;storyViewerUser=userId;storyViewerIndex=Math.max(0,Math.min(index,items.length-1));renderStoryViewer();}
+function renderStoryViewer(){
+ const items=storyGroups.get(storyViewerUser)||[],item=items[storyViewerIndex];if(!item){closeStoryViewer();return;}
+ const profile=window.vpulseProfiles?.get(storyViewerUser)||{},isMine=vpulseUser&&storyViewerUser===vpulseUser.id;
+ document.getElementById("storyPhoto").src=item.media_url;
+ document.getElementById("storyAuthorAvatar").src=profile.avatar_url||"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100";
+ document.getElementById("storyAuthorName").textContent=isMine?"Ваша история":(profile.display_name||profile.username||"Пользователь");
+ document.getElementById("storyAge").textContent=new Date(item.created_at).toLocaleString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+ document.getElementById("storyProgress").innerHTML=items.map((_,i)=>'<i class="'+(i<=storyViewerIndex?"done":"")+'"></i>').join("");
+ document.getElementById("storyViewer").classList.add("open");
+}
+function nextStory(){const items=storyGroups.get(storyViewerUser)||[];if(storyViewerIndex<items.length-1){storyViewerIndex++;renderStoryViewer();}else closeStoryViewer();}
+function previousStory(){if(storyViewerIndex>0){storyViewerIndex--;renderStoryViewer();}}
+function closeStoryViewer(){document.getElementById("storyViewer")?.classList.remove("open");storyViewerUser=null;}
+\nasync function likeDb(b){if(!vpulseUser){openAuth();return;}const id=b.closest(".post")?.dataset.id;if(!id)return;const old=b.classList.contains("liked"),r=old?await vpulse.from("likes").delete().eq("post_id",id).eq("user_id",vpulseUser.id):await vpulse.from("likes").insert({post_id:id,user_id:vpulseUser.id});if(r.error){toast(r.error.message);return;}await loadVPosts();}
 async function addCommentDb(b){if(!vpulseUser){openAuth();return;}const input=b.parentElement.querySelector("input"),content=input.value.trim(),id=b.closest(".post")?.dataset.id;if(!content||!id)return;const {error}=await vpulse.from("comments").insert({post_id:id,user_id:vpulseUser.id,content});if(error){toast("Ошибка комментария: "+error.message);return;}await loadVPosts();toast("Комментарий добавлен");}
 let vpulseSearchTimer=null;
 async function searchPosts(q){
